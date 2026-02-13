@@ -1,3 +1,6 @@
+# Dont save massive GB datasets
+raw/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
