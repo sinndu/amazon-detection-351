@@ -123,7 +123,8 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
 
 if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-    folder_name = f"collected-{timestamp}"
+    model_name = "llama-3.1-8b-instant"
+    folder_name = f"collected-{model_name}-{timestamp}"
     base_output_dir = Path('data/collected')
     final_output_path = base_output_dir / folder_name
 
