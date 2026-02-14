@@ -8,11 +8,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 import google.genai as genai
 from datetime import datetime
+from groq import Groq
+import re
 
 load_dotenv()
-API_KEY = os.getenv("GEMINI_API_KEY") # Grab API key
-
-client = genai.Client(api_key=API_KEY)
+API_KEY = os.getenv("GROQ_API_KEY") # Grab API key
+client = Groq(api_key=API_KEY)
 
 def load_asin_metadata(meta_gz_path): 
     asin_map = {}
@@ -31,18 +32,33 @@ def load_asin_metadata(meta_gz_path):
                 continue
     return asin_map
 
-def generate_ai_review(product_title, rating, word_count): # Generates an AI review based on the given real review
+def generate_ai_review(product_title, rating, word_count):
     prompt = (
-        f"Write a {rating}-star Amazon review for '{product_title}'. "
-        f"Length: ~{word_count} words. Sound like a real customer."
+            f"Write a {rating}-star Amazon review for '{product_title}'. "
+            f"Target length: ~{word_count} words. "
+            "IMPORTANT: Do NOT include a title, do NOT include 'Rating:', and do NOT use any introductory text. "
+            "Just give me the review body itself."
     )
+    
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-pro',
-            contents=prompt
+        completion = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are a realistic Amazon reviewer. You never include titles or labels in your output."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=1024
         )
-        return response.text
-    except Exception: return None
+        
+        text = completion.choices[0].message.content.strip()
+        text = re.sub(r'^(Title|Rating|Review|Headline):\s*', '', text, flags=re.IGNORECASE) # Strip any headers from AI
+        text = text.replace('\n', ' ').replace('\r', ' ').replace('"', "'")
+        return text
+        
+    except Exception as e:
+        print(f"Groq Error: {e}")
+        return None
 
 def build_dataset(review_gz, meta_gz, output_folder, target=1000):
     output_path = Path(output_folder)
@@ -84,14 +100,10 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
     
     print(f"Generating AI reviews for {len(real_matches)} matches:")
     for real_entry in tqdm(real_matches):
-        print(f"Generating for {real_entry['product_title'][:10]}.")
-
         target_len = len(str(real_entry['text']).split()) # Get word count 
         ai_text = generate_ai_review(real_entry['product_title'], real_entry['rating'], target_len) # Generate synthetic review
         
         if ai_text:
-            clean_ai_text = ai_text.replace('\n', ' ').replace('\r', ' ')
-
             real_dataset.append(real_entry)
             synthetic_dataset.append({
                 'text': ai_text, 
@@ -102,7 +114,8 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
                 'asin': real_entry['asin'],
                 'label': 1
             })
-            time.sleep(4.01) # Sleep to keep within rate limits
+        time.sleep(2.1) # Sleep to keep within rate limits
+
 
     pd.DataFrame(real_dataset).to_csv(output_path / 'human_reviews.csv', index=False)
     pd.DataFrame(synthetic_dataset).to_csv(output_path / 'synthetic_reviews.csv', index=False)
@@ -118,5 +131,5 @@ if __name__ == "__main__":
         'data/raw/Electronics.jsonl.gz', 
         'data/raw/meta_Electronics.jsonl.gz', 
         final_output_path,
-        5
+        1000
     )
