@@ -6,13 +6,12 @@ import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 from dotenv import load_dotenv
-import google.genai as genai
 from datetime import datetime
 from groq import Groq
 import re
 
 load_dotenv()
-API_KEY = os.getenv("GROQ_API_KEY") # Grab API key
+API_KEY = os.getenv("GROQ_API_KEY") # api key
 client = Groq(api_key=API_KEY)
 
 def load_asin_metadata(meta_gz_path): 
@@ -32,7 +31,7 @@ def load_asin_metadata(meta_gz_path):
                 continue
     return asin_map
 
-def generate_ai_review(product_title, rating, word_count):
+def generate_ai_review(product_title, rating, word_count): # call groq to generate an ai review
     prompt = (
             f"Write a {rating}-star Amazon review for '{product_title}'. "
             f"Target length: ~{word_count} words. "
@@ -64,9 +63,8 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
     output_path = Path(output_folder)
     output_path.mkdir(parents=True, exist_ok=True)
     
-    asin_to_title = load_asin_metadata(meta_gz) # Load metadata map
+    asin_to_title = load_asin_metadata(meta_gz) # load metadata map
     
-    # Find matches
     real_matches = []
     
     print(f"Processing reviews from {review_gz}:")
@@ -78,10 +76,10 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
             asin = data.get('parent_asin')
             product_title = asin_to_title.get(asin)
 
-            if not product_title or not data.get('verified_purchase') or not data.get('text'): # Skip if not verified, no text, or not in asin map
+            if not product_title or not data.get('verified_purchase') or not data.get('text'): # skip if not verified, no text, or not in asin map
                 continue
             
-            real_entry = { # Save human entry
+            real_entry = { # save human entry
                 'text': data.get('text'),
                 'product_title': product_title,
                 'rating': data.get('rating'),
@@ -94,7 +92,6 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
 
     print(f"{len(real_matches)} matches found!")
 
-    # Start generating AI reviews
     real_dataset = []
     synthetic_dataset = []
     
@@ -114,7 +111,7 @@ def build_dataset(review_gz, meta_gz, output_folder, target=1000):
                 'asin': real_entry['asin'],
                 'label': 1
             })
-        time.sleep(2.1) # Sleep to keep within rate limits
+        time.sleep(2.1) # sleep to keep within rate limits
 
 
     pd.DataFrame(real_dataset).to_csv(output_path / 'human_reviews.csv', index=False)
