@@ -84,13 +84,11 @@ Our first research question aimed to validate whether statistically significant 
 #### 5.1.1 Visual Distribution Analysis
 Visual analysis of the feature distributions provides strong preliminary evidence of distinct writing signatures.
 
-![Fig. 1. Perplexity distributions for Human vs. Al reviews. View A shows the standard scale with outliers removed, while View B highlights the logarithmic separation.](outputs/fig_1.png)
+![Perplexity Hills](outputs/perplexity_hills.png)
+*Fig. 1. Perplexity distributions for Human vs. Al reviews. View A shows the standard scale with outliers removed, while View B highlights the logarithmic separation.*
 
-**Perplexity Analysis:** The perplexity distributions reveal a clear "two-hill" separation, most visible in the logarithmic scale (Fig. 1, View B). Al-generated reviews (red) are heavily clustered at the lower end of the "Weirdness Score," representing the high predictability inherent in LLM token selection. In contrast, human reviews (blue) exhibit a significantly wider and higher distribution, showcasing the natural randomness of organic writing.
-
-![Fig. 2. Burstiness distributions for Human vs. Al reviews. View A displays the structural variance on a standard scale, while View B shows the log-scale isolating the non-zero distribution.](outputs/fig_2.png)
-
-**Burstiness Analysis:** The burstiness distributions (Fig. 2) highlight a structural disparity in sentence construction. Al reviews demonstrate a sharp spike near zero on the standard scale (View A), indicating highly uniform sentence lengths. Human writing, however, shows much higher structural variance and rhythmic unpredictability, with the log-scale peak shifted further to the right.
+![Burstiness Hills](outputs/burstiness_hills.png)
+*Fig. 2. Burstiness distributions for Human vs. Al reviews. View A displays the structural variance on a standard scale, while View B shows the log-scale isolating the non-zero distribution.*
 
 #### 5.1.2 Independent Feature Testing
 To mathematically confirm these visual observations, we first conducted independent statistical tests for each feature, as detailed in Table 2. Both Welch's T-test and the Mann-Whitney U test yielded p-values well below the 0.05 threshold, allowing us to decisively reject the null hypothesis for both individual features.
@@ -100,23 +98,23 @@ Independent Feature Statistical Significance
 
 | Feature | Welch's T-Test (p-value) | Mann-Whitney U (p-value) |
 | :--- | :--- | :--- |
-| Perplexity | $1.04\times10^{-3}$ | $1.91\times10^{-123}$ |
-| Burstiness | $1.14\times10^{-17}$ | $8.31\times10^{-11}$ |
+| Perplexity | 1.04 × 10⁻³ | 1.91 × 10⁻¹²³ |
+| Burstiness | 1.14 × 10⁻¹⁷ | 8.31 × 10⁻¹¹ |
 
 Beyond simply proving that a difference exists, we quantified the magnitude of these differences using descriptive statistics and effect sizes (Table 3). 
 
 **TABLE 3**
 Detailed Statistical Comparison of Linguistic Features
 
-| Feature | Human ( $\sigma$) | $AI(\mu\pm\sigma)$ | Test Stat | Effect Size |
+| Feature | Human (σ) | AI (μ ± σ) | Test Stat | Effect Size |
 | :--- | :--- | :--- | :--- | :--- |
-| Perplexity | 530.954620.63 | $\googlelongdiv{15.34+52.36}$ | $U=789318.0$ | $r=-0.612!$ |
-| Burstiness | $4.47\pm5.18$ | $2.87\pm2.63$ | $t=8.6696$ | $d=0.3922$ |
+| Perplexity | 530.95 ± 4620.63 | 15.34 ± 52.36 | U = 789318.0 | r = -0.612 |
+| Burstiness | 4.47 ± 5.18 | 2.87 ± 2.63 | t = 8.6696 | d = 0.3922 |
 
-The descriptive statistics highlight a clear behavioral difference between the two classes. Standard deviation ($\sigma$) measures the amount of variation or "spread" in a dataset. For perplexity, human writing shows massive variation ($\sigma=4620.63$), reflecting a wide, creative, and unpredictable use of vocabulary. In contrast, Al text is highly constrained and formulaic ($\sigma=52.36$). A similar trend appears in burstiness, where human writing exhibits nearly double the standard deviation (Human $\sigma=5.18$ vs. Al $\sigma=2.63$) indicating that human writers naturally mix long and short sentences far more than Al models do.
+The descriptive statistics highlight a clear behavioral difference between the two classes. Standard deviation (σ) measures the amount of variation or "spread" in a dataset. For perplexity, human writing shows massive variation (σ=4620.63), reflecting a wide, creative, and unpredictable use of vocabulary. In contrast, Al text is highly constrained and formulaic (σ=52.36). A similar trend appears in burstiness, where human writing exhibits nearly double the standard deviation (Human σ=5.18 vs. Al σ=2.63) indicating that human writers naturally mix long and short sentences far more than Al models do.
 
 #### 5.1.3 Combined Multivariate Analysis (MANOVA)
-To evaluate the features while combined, we conducted a Multivariate Analysis of Variance (MANOVA). The results for the classification label across all four multivariate criteria are summarized in Table 4. The tests returned p-values of $<0.0001$ with an $F(2,1976)=46.1036$.
+To evaluate the features while combined, we conducted a Multivariate Analysis of Variance (MANOVA). The results for the classification label across all four multivariate criteria are summarized in Table 4. The tests returned p-values of <0.0001 with an F(2, 1976) = 46.1036.
 
 **TABLE 4**
 Multivariate Analysis of Variance (MANOVA) for the Label Effect
@@ -151,11 +149,15 @@ Logistic Regression Performance Metrics (Test Split)
 #### 5.2.2 Synergistic Combined Performance
 Next, we trained a unified logistic regression model incorporating both linguistic features. 
 
-![Fig. 3. Confusion Matrices demonstrating the shift in classification errors across the Perplexity-only, Burstiness-only, and Combined linear models.](outputs/fig_3.png)
+![Perplexity Only Confusion Matrix](outputs/cm_perplexity_only.png)
+![Burstiness Only Confusion Matrix](outputs/cm_burstiness_only.png)
+![Combined Features Confusion Matrix](outputs/cm_combined.png)
+*Fig. 3. Confusion Matrices demonstrating the shift in classification errors across the Perplexity-only, Burstiness-only, and Combined linear models.*
 
 The integration of both metrics showed a significant performance increase. The combined model achieved an accuracy of 74.49% and an ROC-AUC of 0.8055. This indicates a synergistic relationship: while Burstiness is an ineffective separator in a one-dimensional space, it provides critical contextual variance when mapped alongside Perplexity in a two-dimensional feature space.
 
-![Fig. 4. Linear Decision Boundary of the combined Logistic Regression model.](outputs/fig_4.png)
+![Combined Logistic Regression Decision Boundary](outputs/model_combined_decision.png)
+*Fig. 4. Linear Decision Boundary of the combined Logistic Regression model.*
 
 However, as visualized in Figure 4, the linear decision boundary shows the inherent limitations of this approach. There remains a dense, overlapping region where authentic human reviews and Al-generated reviews have the same linguistic footprint. Al reviews are tightly clustered in the low-perplexity, low-burstiness quadrant. Human reviews display much wider variance, but many data points still cross the linear threshold into the "predictable" zone. This overlap restricts the human recall to 0.65, confirming that while linguistic signatures are valid indicators, their relationship is highly non-linear, justifying the need for the advanced non-linear machine learning techniques explored in RQ3.
 
@@ -177,19 +179,25 @@ Comparative Classification Metrics (Test Split)
 
 As detailed in Table 6, the introduction of tree-based algorithms significantly outperformed the linear baseline. XGBoost emerged as the superior model, achieving an accuracy of 81.82% and an ROC-AUC of 0.8982. Most importantly, both non-linear models successfully mitigated the primary failure point of the linear classifier by drastically improving the recall for authentic human text (rising to 0.84). This indicates the non-linear models successfully learned to distinguish naturally predictable human writers from the LLaMA-3.1-8B generated text without utilizing a rigid threshold.
 
-![Fig. 5. Confusion Matrices for Random Forest (Left) and XGBoost (Right), demonstrating the significant reduction in misclassified human reviews compared to the linear baseline.](outputs/fig_5.png)
+![Random Forest Confusion Matrix](outputs/cm_rf.png)
+![XGBoost Confusion Matrix](outputs/cm_xgb.png)
+*Fig. 5. Confusion Matrices for Random Forest (Left) and XGBoost (Right), demonstrating the significant reduction in misclassified human reviews compared to the linear baseline.*
 
 #### 5.3.2 Decision Boundary Topography
 The fundamental advantage of these ensemble models is visualized in their decision boundaries. Rather than bisecting the feature space, these architectures dynamically segment the data into granular, localized regions.
 
-![Fig. 6. Non-linear Decision Boundaries (Log Scale) for Random Forest (Left) and XGBoost (Right). Both models successfully isolate clusters of authentic human writing within the dense predictable zone.](outputs/fig_6.png)
+![Random Forest Boundary](outputs/boundary_rf.png)
+![XGBoost Boundary](outputs/boundary_xgb.png)
+*Fig. 6. Non-linear Decision Boundaries (Log Scale) for Random Forest (Left) and XGBoost (Right). Both models successfully isolate clusters of authentic human writing within the dense predictable zone.*
 
 As shown in Figure 6, the models established distinct decision boundaries to separate the dense cluster of Al-generated text from the variance of human writing. The Random Forest model established a rectangular threshold, utilizing a combination of perplexity and burstiness to isolate the highly predictable synthetic text. Conversely, the XGBoost visualization reveals a predominantly vertical decision boundary. This indicates that within this two-dimensional feature space, the gradient boosting mechanism heavily prioritized perplexity as the primary discriminative signature, creating a smooth zone across the logarithmic scale to achieve its superior classification accuracy.
 
 #### 5.3.3 Model Training Diagnostics
 To ensure the quality of these advanced architectures and make sure that they did not memorize the matched-pair dataset, we analyzed their internal training dynamics and feature weighting.
 
-![Fig. 7. Feature Importance Rankings for Random Forest (Left) and Training Loss Curve for XGBoost (Right).](outputs/fig_7.png)
+![Random Forest Feature Importance](outputs/rf_feature_importance.png)
+![XGBoost Loss Curve](outputs/xgb_loss_curve.png)
+*Fig. 7. Feature Importance Rankings for Random Forest (Left) and Training Loss Curve for XGBoost (Right).*
 
 The feature importance analysis (Figure 7, Left) provides an ranking of our extracted metrics. Perplexity was used as the dominant driver of classification, confirming that statistical predictability is the most distinctive signature of LLM generation. However, Burstiness also had significant importance, acting as a necessary secondary feature to analyze the structural rhythm of edge cases. Furthermore, the training loss curve for XGBoost (Figure 7, Right) demonstrates steady convergence. While the training loss continues to decrease, the validation loss plateaus and stabilizes without diverging upward. This confirms that the model successfully generalized the linguistic boundaries of the human and synthetic classes without over-fitting to the specific LLAMA-3.1 training samples.
 
