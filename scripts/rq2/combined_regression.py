@@ -23,7 +23,7 @@ y = df['label_num']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-print("Training Combined Model (Perplexity + Burstiness)...")
+print("Training Combined Model (Perplexity + Burstiness).")
 model = LogisticRegression()
 model.fit(X_train, y_train)
 
@@ -38,7 +38,6 @@ print(f"ROC-AUC Score: {auc:.4f}")
 print("\nDetailed Report:")
 print(classification_report(y_test, predictions, target_names=['Human', 'AI']))
 
-# 1. Generate Confusion Matrix
 cm = confusion_matrix(y_test, predictions)
 plt.figure(figsize=(6, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Purples', 
@@ -50,7 +49,6 @@ plt.tight_layout()
 plt.savefig(OUTPUT_CM)
 print(f"Saved confusion matrix to '{OUTPUT_CM}'")
 
-# 2. Generate Decision Boundary Plot
 plt.style.use('seaborn-v0_8')
 plt.figure(figsize=(10, 8))
 

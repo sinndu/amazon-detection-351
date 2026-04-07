@@ -7,7 +7,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.inspection import DecisionBoundaryDisplay
 
-# 1. Setup Data
 try:
     df = pd.read_csv("data/processed/analyzed_reviews_perplexity_burstiness.csv")
     print(f"Loaded {len(df)} reviews.")
@@ -23,24 +22,21 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# 2. Train Random Forest (Standard for metrics)
 rf_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
 rf_model.fit(X_train, y_train)
 
-# 3. Evaluate Metrics
 y_pred = rf_model.predict(X_test)
 y_prob = rf_model.predict_proba(X_test)[:, 1]
 
 acc = accuracy_score(y_test, y_pred)
 auc = roc_auc_score(y_test, y_prob)
 
-print("\n--- Random Forest Results ---")
+print("\n-Random Forest Results")
 print(f"Accuracy: {acc:.4f}")
 print(f"ROC-AUC: {auc:.4f}")
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred, target_names=['Human', 'AI']))
 
-# 4. Save Confusion Matrix
 plt.figure(figsize=(6, 5))
 sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Greens', 
             xticklabels=['Human', 'AI'], yticklabels=['Human', 'AI'])
@@ -51,7 +47,6 @@ plt.tight_layout()
 plt.savefig('cm_rf.png')
 plt.close()
 
-# 5. Save Decision Boundary
 fig, ax = plt.subplots(figsize=(8, 6))
 DecisionBoundaryDisplay.from_estimator(
     rf_model, X.values, response_method="predict",
@@ -65,7 +60,6 @@ plt.tight_layout()
 plt.savefig('boundary_rf.png')
 plt.close()
 
-# 6. Save Feature Importance Plot
 importances = rf_model.feature_importances_
 std = np.std([tree.feature_importances_ for tree in rf_model.estimators_], axis=0)
 forest_importances = pd.Series(importances, index=X.columns)
@@ -79,26 +73,22 @@ plt.tight_layout()
 plt.savefig('rf_feature_importance.png')
 plt.close()
 
-# 7. NEW: Generate and Save OOB Error Curve (The RF equivalent of a Loss Curve)
-print("Generating OOB Error Curve...")
+print("Generating OOB Error Curve.")
 rf_oob = RandomForestClassifier(warm_start=True, oob_score=True, max_depth=10, random_state=42)
 error_rate = []
 
-# Test growing the forest from 15 trees up to 100
 min_estimators = 15
 max_estimators = 100
 
 import warnings
 with warnings.catch_warnings():
-    warnings.simplefilter("ignore") # Ignore warnings about too few trees early on
+    warnings.simplefilter("ignore") 
     for i in range(min_estimators, max_estimators + 1):
         rf_oob.set_params(n_estimators=i)
         rf_oob.fit(X_train, y_train)
-        # Record the OOB error (1 - OOB accuracy score)
         oob_error = 1 - rf_oob.oob_score_
         error_rate.append((i, oob_error))
 
-# Extract data for plotting
 trees, errors = zip(*error_rate)
 
 fig, ax = plt.subplots(figsize=(8, 6))

@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.inspection import DecisionBoundaryDisplay
 
-# 1. Setup Data
 try:
     df = pd.read_csv("data/processed/analyzed_reviews_perplexity_burstiness.csv")
     print(f"Loaded {len(df)} reviews.")
@@ -23,12 +22,10 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# Create a validation set specifically for the loss curve
 X_train_sub, X_val, y_train_sub, y_val = train_test_split(
     X_train, y_train, test_size=0.1, random_state=42, stratify=y_train
 )
 
-# 2. Train XGBoost
 xgb_model = XGBClassifier(
     n_estimators=100, 
     max_depth=6, 
@@ -38,20 +35,18 @@ xgb_model = XGBClassifier(
 )
 xgb_model.fit(X_train_sub, y_train_sub, eval_set=[(X_train_sub, y_train_sub), (X_val, y_val)], verbose=False)
 
-# 3. Evaluate Metrics (on the true unseen test set)
 y_pred = xgb_model.predict(X_test)
 y_prob = xgb_model.predict_proba(X_test)[:, 1]
 
 acc = accuracy_score(y_test, y_pred)
 auc = roc_auc_score(y_test, y_prob)
 
-print("\n--- XGBoost Results ---")
+print("\nXGBoost Results")
 print(f"Accuracy: {acc:.4f}")
 print(f"ROC-AUC: {auc:.4f}")
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred, target_names=['Human', 'AI']))
 
-# 4. Save Confusion Matrix
 plt.figure(figsize=(6, 5))
 sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap='Oranges', 
             xticklabels=['Human', 'AI'], yticklabels=['Human', 'AI'])
@@ -60,9 +55,8 @@ plt.ylabel('True Label')
 plt.xlabel('Predicted Label')
 plt.tight_layout()
 plt.savefig('cm_xgb.png')
-plt.close() # Clears memory so next plot doesn't overlap
+plt.close() 
 
-# 5. Save Decision Boundary
 fig, ax = plt.subplots(figsize=(8, 6))
 DecisionBoundaryDisplay.from_estimator(
     xgb_model, X.values, response_method="predict",
@@ -76,7 +70,6 @@ plt.tight_layout()
 plt.savefig('boundary_xgb.png')
 plt.close()
 
-# 6. Save Loss Curve
 results = xgb_model.evals_result()
 epochs = len(results['validation_0']['logloss'])
 x_axis = range(0, epochs)
@@ -92,7 +85,6 @@ plt.tight_layout()
 plt.savefig('xgb_loss_curve.png')
 plt.close()
 
-# 7. Save Feature Importance Plot (Matching Random Forest)
 importances = xgb_model.feature_importances_
 xgb_importances = pd.Series(importances, index=X.columns)
 

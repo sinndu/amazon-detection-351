@@ -40,7 +40,7 @@ def calculate_burstiness(text):
     
     return np.std(lengths)
 
-print("Calculating Burstiness...")
+print("Calculating Burstiness.")
 tqdm.pandas()
 df['burstiness'] = df['text'].progress_apply(calculate_burstiness)
 

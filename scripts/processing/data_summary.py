@@ -3,7 +3,6 @@ import numpy as np
 import re
 
 def calculate_text_metrics(text):
-    """Calculates word count, sentence count, and character count for a given text."""
     if not isinstance(text, str):
         return 0, 0, 0
     
@@ -18,20 +17,13 @@ def calculate_text_metrics(text):
     return word_count, sentence_count, char_count
 
 def generate_dataset_summary(human_file, ai_file):
-    """
-    Reads the split datasets, assigns labels, merges them, and generates 
-    the statistical summary for Table 1.
-    """
-    # Based on your snippet: text, title, rating, timestamp, user_id, asin, flag
     column_names = ['text', 'title', 'rating', 'timestamp', 'user_id', 'asin', 'flag']
     
     print("Loading datasets...")
     try:
-        # Load Human Data
         df_human = pd.read_csv(human_file, header=None, names=column_names)
         df_human['label'] = 'Human-Written'
         
-        # Load AI Data
         df_ai = pd.read_csv(ai_file, header=None, names=column_names)
         df_ai['label'] = 'LLM-Generated'
         
@@ -39,10 +31,8 @@ def generate_dataset_summary(human_file, ai_file):
         print(f"Error: {e}")
         return
 
-    # Merge the datasets
-    df = pd.concat([df_human, df_ai], ignore_index=True)
+    df = pd.concat([df_human, df_ai], ignore_index=True) # merge datasets
 
-    # --- THE FIX: Force rating to be numeric ---
     df['rating'] = pd.to_numeric(df['rating'], errors='coerce')
     
     print("Calculating word and sentence counts...")
@@ -50,7 +40,7 @@ def generate_dataset_summary(human_file, ai_file):
         lambda row: pd.Series(calculate_text_metrics(row['text'])), axis=1
     )
     
-    print("\n--- DATASET SUMMARY FOR TABLE 1 ---")
+    print("\nDATASET SUMMARY FOR TABLE 1")
     
     classes = ['Human-Written', 'LLM-Generated']
     summary_data = []
@@ -61,7 +51,6 @@ def generate_dataset_summary(human_file, ai_file):
         metrics = {
             'Class Label': cls,
             'Total Samples': len(subset),
-            # Using .mean(numeric_only=True) for extra safety
             'Average Word Count': round(subset['word_count'].mean(), 1),
             'Average Sentence Count': round(subset['sentence_count'].mean(), 1),
             'Mean Rating': round(subset['rating'].mean(), 1)
